@@ -30,10 +30,10 @@ class PayPalLog extends CRUD {
 		parse_str($response, $received);
 		
 		// PCI compliance: can't store entire request envelope
-		unset($sent['PWD']);
-		unset($sent['SIGNATURE']);
-		if (isset($sent['CVV2'])) {
-			unset($sent['CVV2']);
+		foreach (array('PWD', 'SIGNATURE', 'CVV2', 'ACCT') as $mask) {
+			if (isset($sent[$mask])) {
+				$sent[$mask] = '*';
+			}
 		}
 		
 		// store the responses
