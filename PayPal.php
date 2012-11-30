@@ -65,7 +65,9 @@ class PayPal {
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_POST, 1);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
-		$response = curl_exec($ch);
+		if (!$response = curl_exec($ch)) {
+			return FALSE;
+		}
 		
 		// store log
 		PayPalLog::store($request, $response);
