@@ -1,14 +1,15 @@
 <?php
 /**
- * PayPal API Encapsulation
+ * PayPal NVP
  *
  * @author Nicholas Whitt <nick.whitt@gmail.com>
  * @copyright Copyright (c) 2012, Nicholas Whitt
  * @link https://github.com/nickwhitt/PayPalAPI Source
- * @license http://www.gnu.org/licenses/lgpl.html Lesser General Public License, version 3
+ * @license http://www.apache.org/licenses/ Apache License Version 2.0
  */
 
-class PayPal {
+namespace PayPalAPI;
+class NVP {
 	protected $user;
 	protected $password;
 	protected $signature;

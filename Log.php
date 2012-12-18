@@ -6,10 +6,11 @@
  * @copyright Copyright (c) 2012, Nicholas Whitt
  * @link https://github.com/nickwhitt/PayPalAPI Source
  * @link https://github.com/nickwhitt/CRUD Dependency
- * @license http://www.gnu.org/licenses/lgpl.html Lesser General Public License, version 3
+ * @license http://www.apache.org/licenses/ Apache License Version 2.0
  */
 
-class PayPalLog extends CRUD {
+namespace PayPalAPI;
+class Log extends CRUD {
 	public function __construct($id=NULL) {
 		parent::__construct('paypal_log', $id);
 	}
