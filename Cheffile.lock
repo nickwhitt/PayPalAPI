@@ -3,30 +3,49 @@ SITE
   specs:
     apache2 (1.4.0)
     apt (1.7.0)
-    build-essential (1.3.0)
+    build-essential (1.3.2)
+    chef_handler (1.1.2)
+    dmg (1.1.0)
+    git (2.1.2)
+      build-essential (>= 0.0.0)
+      dmg (>= 0.0.0)
+      runit (>= 0.0.0)
+      windows (>= 0.0.0)
+      yum (>= 0.0.0)
     mysql (2.1.0)
       build-essential (>= 0.0.0)
       openssl (>= 0.0.0)
+    ntp (1.3.2)
     openssl (1.0.0)
-    php (1.1.2)
+    php (1.1.4)
       build-essential (>= 0.0.0)
       mysql (>= 0.0.0)
       xml (>= 0.0.0)
+    runit (0.16.2)
+    timezone (0.0.1)
+    ubuntu (1.0.0)
+      apt (>= 0.0.0)
+    windows (1.7.0)
+      chef_handler (>= 0.0.0)
     xml (1.1.2)
       build-essential (>= 0.0.0)
+    yum (2.0.6)
 
 GIT
   remote: https://github.com/nickwhitt/devtools.git
-  ref: v0.2
-  sha: 45fa215dc290b0fdc830f5cdf8bde80238aba22f
+  ref: master
+  sha: 0bbd9cdbcd85950bd957eb74e151f0af22a53c6e
   specs:
-    devtools (0.2.0)
+    devtools (0.3.0)
       apache2 (>= 0.0.0)
       apt (>= 0.0.0)
+      git (>= 0.0.0)
       mysql (>= 0.0.0)
       php (>= 0.0.0)
 
 DEPENDENCIES
-  apt (>= 0)
   devtools (>= 0)
+  ntp (>= 0)
+  timezone (>= 0)
+  ubuntu (>= 0)
 
