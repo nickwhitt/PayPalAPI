@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit colors="true" verbose="true" bootstrap="bootstrap.php">
+  <testsuites>
+    <testsuite name="PayPal API">
+      <file phpVersion="5.3.0" phpVersionOperator=">=">tests/NVPTest.php</file>
+    </testsuite>
+  </testsuites>
+</phpunit>
