@@ -16,16 +16,25 @@ class NVP {
 	protected $endpoint;
 	protected $version;
 	protected $response;
+	protected $curl;
 	
-	public function __construct($user=NULL, $password=NULL, $signature=NULL, $version=NULL) {
-		$this->user = is_null($user) ? PAYPAL_USER : $user;
-		$this->password = is_null($password) ? PAYPAL_PASSWORD : $password;
-		$this->signature = is_null($signature) ? PAYPAL_SIGNATURE : $signature;
-		$this->version = is_null($version) ? PAYPAL_VERSION : $version;
+	public function __construct($user, $password, $signature, $version='95.0') {
+		$this->user = $user;
+		$this->password = $password;
+		$this->signature = $signature;
+		$this->version = $version;
+		
+		$this->setEndpoint();
+	}
+	
+	public function setEndpoint($sandbox=FALSE, $curl_class='\PayPalAPI\CurlRequest') {
 		$this->endpoint = sprintf(
 			'https://api-3t.%spaypal.com/nvp',
-			ENVIRONMENT == 'production' ? '' : 'sandbox.'
+			$sandbox === FALSE ? '' : 'sandbox.'
 		);
+		
+		$this->curl = new $curl_class($this->endpoint);
+		$this->curl->setOption(CURLOPT_SSL_VERIFYHOST, !$sandbox);
 	}
 	
 	public function __get($property) {
@@ -33,49 +42,14 @@ class NVP {
 	}
 	
 	public function __call($method, $fields) {
-		if (empty($fields)) {
-			return $this->post($method);
+		$this->defaultData($method);
+		if (!empty($fields) AND is_array($fields[0])) {
+			foreach ($fields[0] as $option => $value) {
+				$this->curl->setData($option, $value);
+			}
 		}
 		
-		return $this->post($method, $fields[0]);
-	}
-	
-	
-	/**
-	 * cURL NVP call
-	 *
-	 * Builds (and logs) the cURL request envelope and processes the response.
-	 * Returns success based on acknowledgement code.
-	 *
-	 * @param str $method
-	 * @param array $fields
-	 * @return bool
-	 */
-	protected function post($method, array $fields=array()) {
-		// build request envelope
-		$request = http_build_query(
-			array_merge(
-				$this->default_headers($method),
-				$fields
-			)
-		);
-		
-		// make API call over cURL
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $this->endpoint);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
-		if (!$response = curl_exec($ch)) {
-			return FALSE;
-		}
-		
-		// store log
-		PayPalLog::store($request, $response);
-		
-		// internalize response and return success
-		parse_str($response, $this->response);
-		return strpos($this->response['ACK'], 'Failure') === FALSE;
+		return $this->curl->post();
 	}
 	
 	/**
@@ -85,15 +59,23 @@ class NVP {
 	 * and method fields.
 	 *
 	 * @param str $method
-	 * @return array
+	 * @return void
 	 */
-	protected function default_headers($method) {
-		return array(
-			'USER' => $this->user,
-			'PWD' => $this->password,
-			'SIGNATURE' => $this->signature,
-			'VERSION' => $this->version,
-			'METHOD' => $method
-		);
+	protected function defaultData($method) {
+		$this->validateMethod($method);
+		$this->curl
+			->setData('USER', $this->user)
+			->setData('PWD', $this->password)
+			->setData('SIGNATURE', $this->signature)
+			->setData('VERSION', $this->version)
+			->setData('METHOD', $method);
+	}
+	
+	protected function validateMethod($method) {
+		$valids = array('DoDirectPayment', 'DoCapture');
+		
+		if (!in_array($method, $valids)) {
+			throw new \Exception('Unknown API Call');
+		}
 	}
 }
