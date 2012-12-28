@@ -2,10 +2,24 @@
 PayPal Payments Pro API written for PHP 5.3  
 <https://github.com/nickwhitt/PayPalAPI>
 
-# Copyright
+## Requirements
+
+	require_once '/path/to/Curl.php';
+	require_once '/path/to/CurlRequest.php';
+	require_once '/path/to/NVP.php';
+
+## Usage
+	
+	$api = new \PayPalAPI\NVP($username, $password, $signature[, $version]);
+	if (!$api->DoDirectPayment($fields)) {
+		// failure recovery
+	}
+	// profit
+
+## Copyright
 Copyright (c) 2012, Nicholas Whitt (<nick.whitt@gmail.com>)
 
-# License
+## License
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
