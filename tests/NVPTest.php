@@ -66,14 +66,23 @@ class NVPTest extends \PHPUnit_Framework_TestCase {
 		$this->api->badCall();
 	}
 	
+	public function testBody() {
+		$body = $this->sampleResponse();
+		$envelope = http_build_query($body);
+		
+		$this->api->curl->setBody($envelope);
+		$this->assertEquals($envelope, $this->api->curl->getBody());
+		$this->assertEquals($body, $this->api->curl->getBody(FALSE));
+	}
+	
 	public function testDoDirectPayment() {
-		// build required fields
+		// build sample data envelope
 		$fields = array(
 			'PAYMENTACTION' => 'Authorization',
 			'IPADDRESS' => '192.168.0.1',
 			'RETURNFMFDETAILS' => 1,
 			'ACCT' => '4024275403188768',
-			'EXPDATE' => '122017',
+			'EXPDATE' => date('mY', strtotime('+2 years')),
 			'CVV2' => '123',
 			'FIRSTNAME' => 'Joe',
 			'LASTNAME' => 'Public',
@@ -87,22 +96,58 @@ class NVPTest extends \PHPUnit_Framework_TestCase {
 		);
 		
 		// prepend 3t info
-		$compare = array_merge(
-			array(
-				'USER' => API_USERNAME,
-				'PWD' => API_PASSWORD,
-				'SIGNATURE' => API_SIGNATURE,
-				'VERSION'   => API_VERSION,
-				'METHOD'    => 'DoDirectPayment'
-			),
-			$fields
-		);
+		$compare = array_merge($this->sampleHeaders('DoDirectPayment'), $fields);
 		
-		$this->api->DoDirectPayment($fields);
+		// first response should fail as there is no stub response body
+		$this->assertFalse($this->api->DoDirectPayment($fields), 'API call did not fail');
+		
+		// validate data envelope
 		$this->assertEquals($compare, $this->api->curl->getData(FALSE));
 		$this->assertEquals(http_build_query($compare), $this->api->curl->getData());
 		
-		$this->api->curl->setBody('TIMESTAMP=2012%2d12%2d28T14%3a09%3a48Z&CORRELATIONID=ef9f79c2b709&ACK=Success&VERSION=95%2e0&BUILD=4137385&AMT=50%2e00&CURRENCYCODE=USD&AVSCODE=X&CVV2MATCH=M&TRANSACTIONID=1D382620KK449161R');
-		$this->assertEquals('TIMESTAMP=2012%2d12%2d28T14%3a09%3a48Z&CORRELATIONID=ef9f79c2b709&ACK=Success&VERSION=95%2e0&BUILD=4137385&AMT=50%2e00&CURRENCYCODE=USD&AVSCODE=X&CVV2MATCH=M&TRANSACTIONID=1D382620KK449161R', $this->api->curl->getBody());
+		// simulate a response body and re-attempt API "call"
+		$this->api->curl->setBody(http_build_query($this->sampleResponse()));
+		$this->assertTrue($this->api->DoDirectPayment($fields), 'API call failed');
+		
+		// validate data envelope was maintained with both calls
+		$this->assertEquals($compare, $this->api->curl->getData(FALSE));
+		$this->assertEquals(http_build_query($compare), $this->api->curl->getData());
+	}
+	
+	/**
+	 * Builds an array of cURL headers defined by the PayPal API
+	 *
+	 * @param str $method PayPal API Call
+	 * @return array
+	 */
+	protected function sampleHeaders($method) {
+		return array(
+			'USER' => API_USERNAME,
+			'PWD' => API_PASSWORD,
+			'SIGNATURE' => API_SIGNATURE,
+			'VERSION'   => API_VERSION,
+			'METHOD'    => $method
+		);
+	}
+	
+	/**
+	 * Builds an array which emulates a DoDirectPayment API response
+	 *
+	 * @param void
+	 * @return array
+	 */
+	protected function sampleResponse() {
+		return array(
+			'TIMESTAMP' => date('Y-m-d\TH:i:s\Z'),
+			'CORRELATIONID' => substr(md5(rand()), 0, 12),
+			'ACK' => "Success",
+			'VERSION' => API_VERSION,
+			'BUILD' => substr(rand(), 0, 7),
+			'AMT' => "50.00",
+			'CURRENCYCODE' => "USD",
+			'AVSCODE' => "X",
+			'CVV2MATCH' => "M",
+			'TRANSACTIONID' => substr(md5(rand()), 0, 17)
+		);
 	}
 }
