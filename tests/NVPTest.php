@@ -114,6 +114,30 @@ class NVPTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals(http_build_query($compare), $this->api->curl->getData());
 	}
 	
+	public function testIsLogEnabled() {
+		if (!class_exists('\CRUD\DatabaseLayer')) {
+			$this->markTestSkipped('\CRUD\DatabaseLayer not found');
+		}
+		
+		$this->assertFalse($this->api->isLogEnabled(), 'Log should not be enabled by default');
+		
+		$pdo = $this->getMock('mockPDO');
+		$dba = new \CRUD\MysqlLayer($pdo);
+		$this->api->enableLog($dba);
+		$this->assertTrue($this->api->isLogEnabled(), 'Log should have been enabled');
+		
+		$this->api->disableLog();
+		$this->assertFalse($this->api->isLogEnabled(), 'Log should have been disabled');
+	}
+	
+	public function testLog() {
+		if (!class_exists('\CRUD\DatabaseLayer')) {
+			$this->markTestSkipped('\CRUD\DatabaseLayer not found');
+		}
+		
+		$this->markTestIncomplete('Not yet implemented.');
+	}
+	
 	/**
 	 * Builds an array of cURL headers defined by the PayPal API
 	 *

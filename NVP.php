@@ -13,10 +13,14 @@ class NVP {
 	protected $user;
 	protected $password;
 	protected $signature;
-	protected $endpoint;
 	protected $version;
-	protected $response;
+
+	protected $endpoint;
 	protected $curl;
+	protected $response = NULL;
+	
+	protected $log_dba = NULL;
+	protected $log_table = NULL;
 	
 	public function __construct($user, $password, $signature, $version='95.0') {
 		$this->user = $user;
@@ -80,7 +84,46 @@ class NVP {
 		}
 		
 		parse_str($response, $this->response);
+		if ($this->isLogEnabled()) $this->logCall($this->curl->getBody());
+		
 		return strpos($this->response['ACK'], 'Failure') === FALSE;
+	}
+	
+	/**
+	 * Tests if the log has been enabled
+	 *
+	 * Checks that ::log_dba and ::log_table are both non-null.
+	 *
+	 * @param void
+	 * @return bool
+	 */
+	public function isLogEnabled() {
+		return (!is_null($this->log_dba) && !is_null($this->log_table));
+	}
+	
+	/**
+	 * Enables API call logs
+	 *
+	 * Utilizes CRUD\ActiveModel for database access.
+	 * @link https://github.com/nickwhitt/CRUD
+	 *
+	 * @param CRUD\DatabaseLayer $dba
+	 * @param str $table
+	 * @return void
+	 */
+	public function enableLog(\CRUD\DatabaseLayer $dba, $table='paypal_log') {
+		$this->log_dba = $dba;
+		$this->log_table = $table;
+	}
+	
+	/**
+	 * Disables API call logs
+	 *
+	 * @param void
+	 * @return void
+	 */
+	public function disableLog() {
+		$this->log_dba = $this->log_table = NULL;
 	}
 	
 	/**
@@ -116,5 +159,9 @@ class NVP {
 		if (!in_array($method, $valids)) {
 			throw new \Exception('Unknown API Call');
 		}
+	}
+	
+	protected function logCall($request) {
+		return FALSE;
 	}
 }
