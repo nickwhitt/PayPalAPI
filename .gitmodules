@@ -1,0 +1,3 @@
+[submodule "vendor/CRUD"]
+	path = vendor/CRUD
+	url = git://github.com/nickwhitt/CRUD.git
