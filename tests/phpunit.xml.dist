@@ -3,6 +3,7 @@
   <testsuites>
     <testsuite name="PayPal API">
       <file phpVersion="5.3.0" phpVersionOperator=">=">tests/NVPTest.php</file>
+      <file phpVersion="5.3.0" phpVersionOperator=">=">tests/IPNListenerTest.php</file>
     </testsuite>
   </testsuites>
 </phpunit>
