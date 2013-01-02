@@ -77,23 +77,7 @@ class NVPTest extends \PHPUnit_Framework_TestCase {
 	
 	public function testDoDirectPayment() {
 		// build sample data envelope
-		$fields = array(
-			'PAYMENTACTION' => 'Authorization',
-			'IPADDRESS' => '192.168.0.1',
-			'RETURNFMFDETAILS' => 1,
-			'ACCT' => '4024275403188768',
-			'EXPDATE' => date('mY', strtotime('+2 years')),
-			'CVV2' => '123',
-			'FIRSTNAME' => 'Joe',
-			'LASTNAME' => 'Public',
-			'STREET' => '123 Main St',
-			'STREET2' => '',
-			'CITY' => 'Columbus',
-			'STATE' => 'OH',
-			'ZIP' => '43215',
-			'COUNTRYCODE' => 'US',
-			'AMT' => '50.00'
-		);
+		$fields = $this->sampleRequest();
 		
 		// prepend 3t info
 		$compare = array_merge($this->sampleHeaders('DoDirectPayment'), $fields);
@@ -114,28 +98,33 @@ class NVPTest extends \PHPUnit_Framework_TestCase {
 		$this->assertEquals(http_build_query($compare), $this->api->curl->getData());
 	}
 	
-	public function testIsLogEnabled() {
-		if (!class_exists('\CRUD\DatabaseLayer')) {
-			$this->markTestSkipped('\CRUD\DatabaseLayer not found');
-		}
-		
-		$this->assertFalse($this->api->isLogEnabled(), 'Log should not be enabled by default');
-		
-		$pdo = $this->getMock('mockPDO');
-		$dba = new \CRUD\MysqlLayer($pdo);
-		$this->api->enableLog($dba);
-		$this->assertTrue($this->api->isLogEnabled(), 'Log should have been enabled');
-		
-		$this->api->disableLog();
-		$this->assertFalse($this->api->isLogEnabled(), 'Log should have been disabled');
+	public function testLogException() {
+		$this->setExpectedException('Exception', 'Logging is not enabled');
+		$this->api->logCall();
 	}
 	
-	public function testLog() {
-		if (!class_exists('\CRUD\DatabaseLayer')) {
-			$this->markTestSkipped('\CRUD\DatabaseLayer not found');
-		}
+	public function testLogCall() {
+		// enable log
+		$this->assertFalse($this->api->isLogEnabled(), 'Log should not be enabled by default');
+		$this->api->enableLog($this->mockDba());
+		$this->assertTrue($this->api->isLogEnabled(), 'Log should have been enabled');
+		$this->assertFalse($this->api->logCall(), 'There is no call to log');
 		
-		$this->markTestIncomplete('Not yet implemented.');
+		// make API call
+		$this->assertFalse($this->api->log->exists(), 'Log should not exist');
+		$this->api->curl->setBody(http_build_query($this->sampleResponse()));
+		$this->assertTrue($this->api->DoDirectPayment($this->sampleRequest()), 'API call failed');
+		$this->assertTrue($this->api->log->exists(), 'Log should exist');
+		
+		// verify logged data matches cURL
+		$data = $this->api->curl->getData(FALSE);
+		$data['PWD'] = $data['SIGNATURE'] = $data['CVV2'] = $data['ACCT'] = '*';
+		$this->assertEquals(http_build_query($data), $this->api->log->request);
+		$this->assertEquals($this->api->curl->getBody(), $this->api->log->response);
+		
+		// disable log
+		$this->api->disableLog();
+		$this->assertFalse($this->api->isLogEnabled(), 'Log should have been disabled');
 	}
 	
 	/**
@@ -151,6 +140,34 @@ class NVPTest extends \PHPUnit_Framework_TestCase {
 			'SIGNATURE' => API_SIGNATURE,
 			'VERSION'   => API_VERSION,
 			'METHOD'    => $method
+		);
+	}
+	
+	/**
+	 * Builds an array of cURL data elements
+	 *
+	 * Elements correspond to the necessary fields for the DoDirectPayment API call.
+	 *
+	 * @param void
+	 * @return array
+	 */
+	protected function sampleRequest() {
+		return array(
+			'PAYMENTACTION' => 'Authorization',
+			'IPADDRESS' => '192.168.0.1',
+			'RETURNFMFDETAILS' => 1,
+			'ACCT' => '4024275403188768',
+			'EXPDATE' => date('mY', strtotime('+2 years')),
+			'CVV2' => '123',
+			'FIRSTNAME' => 'Joe',
+			'LASTNAME' => 'Public',
+			'STREET' => '123 Main St',
+			'STREET2' => '',
+			'CITY' => 'Columbus',
+			'STATE' => 'OH',
+			'ZIP' => '43215',
+			'COUNTRYCODE' => 'US',
+			'AMT' => '50.00'
 		);
 	}
 	
@@ -173,5 +190,44 @@ class NVPTest extends \PHPUnit_Framework_TestCase {
 			'CVV2MATCH' => "M",
 			'TRANSACTIONID' => substr(md5(rand()), 0, 17)
 		);
+	}
+	
+	/**
+	 * Creates a mock DBA for database testing
+	 *
+	 * @param void
+	 * @return Mock CRUD\MysqlLayer
+	 */
+	protected function mockDba() {
+		$fields = array(
+			array('id', 'PRI'),
+			array('method', 'MUL'),
+			array('ack', '', 'Failure'),
+			array('correlationid', 'UNI'),
+			array('timestamp', 'MUL'),
+			array('build'),
+			array('version'),
+			array('transactionid', 'MUL'),
+			array('amt'),
+			array('l_errorcode0'),
+			array('request'),
+			array('response')
+		);
+		
+		$table = array();
+		foreach ($fields as $field) {
+			$row = new \stdClass();
+			$row->Field = $field[0];
+			$row->Key = isset($field[1]) ? $field[1] : '';
+			$row->Default = isset($field[2]) ? $field[2] : NULL;
+			
+			$table[] = $row;
+		}
+		
+		$dba = $this->getMockBuilder('\CRUD\MysqlLayer')->disableOriginalConstructor()->getMock();
+		$dba->expects($this->any())->method('describeTable')->will($this->returnValue($table));
+		$dba->expects($this->any())->method('insert')->will($this->returnValue('123'));
+		
+		return $dba;
 	}
 }

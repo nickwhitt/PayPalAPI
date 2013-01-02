@@ -18,9 +18,7 @@ class NVP {
 	protected $endpoint;
 	protected $curl;
 	protected $response = NULL;
-	
-	protected $log_dba = NULL;
-	protected $log_table = NULL;
+	protected $log = NULL;
 	
 	public function __construct($user, $password, $signature, $version='95.0') {
 		$this->user = $user;
@@ -67,6 +65,9 @@ class NVP {
 	 * Validates API method and builds the data envelope. Returns
 	 * success as indicated by API response code: ACK.
 	 *
+	 * If enabled, the API call (request and response) will be logged to the
+	 * database.
+	 *
 	 * @param str $method API method
 	 * @param array $fields
 	 * @return bool
@@ -84,7 +85,7 @@ class NVP {
 		}
 		
 		parse_str($response, $this->response);
-		if ($this->isLogEnabled()) $this->logCall($this->curl->getBody());
+		if ($this->isLogEnabled()) $this->logCall();
 		
 		return strpos($this->response['ACK'], 'Failure') === FALSE;
 	}
@@ -92,17 +93,17 @@ class NVP {
 	/**
 	 * Tests if the log has been enabled
 	 *
-	 * Checks that ::log_dba and ::log_table are both non-null.
-	 *
 	 * @param void
 	 * @return bool
 	 */
 	public function isLogEnabled() {
-		return (!is_null($this->log_dba) && !is_null($this->log_table));
+		return !is_null($this->log);
 	}
 	
 	/**
 	 * Enables API call logs
+	 *
+	 * Ensures API calls are logged to the database automatically.
 	 *
 	 * Utilizes CRUD\ActiveModel for database access.
 	 * @link https://github.com/nickwhitt/CRUD
@@ -112,8 +113,49 @@ class NVP {
 	 * @return void
 	 */
 	public function enableLog(\CRUD\DatabaseLayer $dba, $table='paypal_log') {
-		$this->log_dba = $dba;
-		$this->log_table = $table;
+		$this->log = new \CRUD\ActiveModel($dba, $table);
+	}
+	
+	/**
+	 * Logs API Call
+	 *
+	 * @param void
+	 * @return bool
+	 */
+	public function logCall() {
+		// sanity check
+		if (!$this->isLogEnabled()) {
+			throw new \Exception('Logging is not enabled');
+		}
+		
+		$sent = $this->curl->getData(FALSE);
+		$received = $this->curl->getBody(FALSE);
+		if (empty($received)) {
+			return FALSE;
+		}
+		
+		// PCI compliance: can't store entire request envelope
+		foreach (array('PWD', 'SIGNATURE', 'CVV2', 'ACCT') as $mask) {
+			if (isset($sent[$mask])) {
+				$sent[$mask] = '*';
+			}
+		}
+		
+		// store the responses
+		foreach ($received as $name => $value) {
+			try {
+				$this->log->__set(strtolower($name), $value);
+			} catch (Exception $e) {
+				// ignore exception
+			}
+		}
+		
+		// capture method and envelopes
+		$this->log->method = $sent['METHOD'];
+		$this->log->request = http_build_query($sent);
+		$this->log->response = $this->curl->getBody();
+		
+		return $this->log->save();
 	}
 	
 	/**
@@ -123,7 +165,7 @@ class NVP {
 	 * @return void
 	 */
 	public function disableLog() {
-		$this->log_dba = $this->log_table = NULL;
+		$this->log = NULL;
 	}
 	
 	/**
@@ -159,9 +201,5 @@ class NVP {
 		if (!in_array($method, $valids)) {
 			throw new \Exception('Unknown API Call');
 		}
-	}
-	
-	protected function logCall($request) {
-		return FALSE;
 	}
 }

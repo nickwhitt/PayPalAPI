@@ -19,8 +19,10 @@ require_once dirname(__FILE__) . '/../Curl.php';
 require_once dirname(__FILE__) . '/../CurlRequest.php';
 require_once dirname(__FILE__) . '/CurlRequestStub.php';
 require_once dirname(__FILE__) . '/../NVP.php';
-require_once dirname(__FILE__) . '/MockPDO.php';
 
-include dirname(__FILE__) . '/../vendor/CRUD/Query.php';
-include dirname(__FILE__) . '/../vendor/CRUD/DatabaseLayer.php';
-include dirname(__FILE__) . '/../vendor/CRUD/MysqlLayer.php';
+// vendor
+require_once dirname(__FILE__) . '/../vendor/CRUD/Query.php';
+require_once dirname(__FILE__) . '/../vendor/CRUD/DatabaseLayer.php';
+require_once dirname(__FILE__) . '/../vendor/CRUD/MysqlLayer.php';
+require_once dirname(__FILE__) . '/../vendor/CRUD/ActiveBase.php';
+require_once dirname(__FILE__) . '/../vendor/CRUD/ActiveModel.php';
