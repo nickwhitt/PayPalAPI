@@ -18,6 +18,9 @@ define('API_VERSION', '95.0');
 require_once dirname(__FILE__) . '/../Curl.php';
 require_once dirname(__FILE__) . '/../CurlRequest.php';
 require_once dirname(__FILE__) . '/CurlRequestStub.php';
+
+// objects
+require_once dirname(__FILE__) . '/../Base.php';
 require_once dirname(__FILE__) . '/../NVP.php';
 
 // vendor

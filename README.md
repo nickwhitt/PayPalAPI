@@ -1,14 +1,48 @@
 # PayPalAPI
+
 PayPal Payments Pro API written for PHP 5.3  
 <https://github.com/nickwhitt/PayPalAPI>
 
 ## Usage
+
+### NVP
 	
 	$api = new \PayPalAPI\NVP($username, $password, $signature[, $version]);
 	if (!$api->DoDirectPayment($fields)) {
 		// failure recovery
 	}
 	// profit
+
+See [PayPal API Reference](https://www.x.com/developers/paypal/documentation-tools/api) for the necessary request fields.
+
+	// example DoDirectPayment fields
+	$fields = array(
+		'PAYMENTACTION' => 'Authorization',
+		'IPADDRESS' => $_SERVER['REMOTE_ADDR'],
+		'RETURNFMFDETAILS' => 1,
+		'ACCT' => $cc_acct,
+		'EXPDATE' => $cc_exp,
+		'CVV2' => $cc_cvv2,
+		'FIRSTNAME' => 'Joe',
+		'LASTNAME' => 'Public',
+		'STREET' => '123 Main St',
+		'STREET2' => '',
+		'CITY' => 'Columbus',
+		'STATE' => 'OH',
+		'ZIP' => '43215',
+		'COUNTRYCODE' => 'US',
+		'AMT' => '50.00'
+	);
+
+## History
+
+### Version 0.2
+
+Bundling NVP Usage with logging capability.
+
+### Version 0.1
+
+Proof of concept build.
 
 ## Copyright
 Copyright (c) 2012, Nicholas Whitt (<nick.whitt@gmail.com>)

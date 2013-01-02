@@ -9,16 +9,11 @@
  */
 
 namespace PayPalAPI;
-class NVP {
+class NVP extends Base {
 	protected $user;
 	protected $password;
 	protected $signature;
 	protected $version;
-
-	protected $endpoint;
-	protected $curl;
-	protected $response = NULL;
-	protected $log = NULL;
 	
 	public function __construct($user, $password, $signature, $version='95.0') {
 		$this->user = $user;
@@ -33,30 +28,13 @@ class NVP {
 	 * Defines PayPal API Endpoint
 	 *
 	 * Builds the endpoint for a Merchant NVP call using Certificate authentication.
-	 * cURL SSL verification is automatically disabled in sandbox mode.
 	 *
-	 * @param bool $sandbox Sandbox endpoint?
-	 * @param str $curl_class Class name
+	 * @param bool $sandbox Sandbox Endpoint?
+	 * @param str $curl_class Class Name
 	 * @return void
 	 */
 	public function setEndpoint($sandbox=FALSE, $curl_class='\PayPalAPI\CurlRequest') {
-		$this->endpoint = sprintf(
-			'https://api-3t.%spaypal.com/nvp',
-			$sandbox === FALSE ? '' : 'sandbox.'
-		);
-		
-		$this->curl = new $curl_class($this->endpoint);
-		$this->curl->setOption(CURLOPT_SSL_VERIFYHOST, !$sandbox);
-	}
-	
-	/**
-	 * Retrieves object property
-	 *
-	 * @param str $property
-	 * @return mixed
-	 */
-	public function __get($property) {
-		return $this->$property;
+		parent::setEndpoint('https://api-3t.%spaypal.com/nvp', $sandbox, $curl_class);
 	}
 	
 	/**
