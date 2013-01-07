@@ -34,9 +34,9 @@ SITE
 GIT
   remote: https://github.com/nickwhitt/devtools.git
   ref: master
-  sha: 0bbd9cdbcd85950bd957eb74e151f0af22a53c6e
+  sha: 419cc15255ee013fdeb95baeeb908cf5064d0bea
   specs:
-    devtools (0.3.0)
+    devtools (0.4.0)
       apache2 (>= 0.0.0)
       apt (>= 0.0.0)
       git (>= 0.0.0)
