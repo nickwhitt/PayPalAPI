@@ -1,4 +1,4 @@
-# PayPalAPI
+# PayPalAPI [![Build Status](https://travis-ci.org/nickwhitt/PayPalAPI.png)](https://travis-ci.org/nickwhitt/PayPalAPI)
 
 PayPal Payments Pro API written for PHP 5.3  
 <https://github.com/nickwhitt/PayPalAPI>
